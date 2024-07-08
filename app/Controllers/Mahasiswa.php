@@ -20,32 +20,93 @@ class Mahasiswa extends Controller
         return view('mahasiswa/create');
     }
 
+    // public function store()
+    // {
+    //     $model = new MahasiswaModel();
+
+    //     $fotoDiriBase64 = $this->request->getPost('cropped_foto_diri');
+    //     $fotoKtpBase64 = $this->request->getPost('cropped_foto_ktp');
+
+    //     $fotoDiriName = null;
+    //     $fotoKtpName = null;
+
+    //     if ($fotoDiriBase64) {
+    //         $fotoDiriName = $this->saveBase64Image($fotoDiriBase64, 'uploads/foto_diri');
+    //     }
+
+    //     if ($fotoKtpBase64) {
+    //         $fotoKtpName = $this->saveBase64Image($fotoKtpBase64, 'uploads/foto_ktp');
+    //     }
+
+    //     $model->insert([
+    //         'nim' => $this->request->getPost('nim'),
+    //         'nama' => $this->request->getPost('nama'),
+    //         'foto_diri' => $fotoDiriName,
+    //         'foto_ktp' => $fotoKtpName,
+    //     ]);
+
+    //     return redirect()->to('/mahasiswa');
+    // }
+
     public function store()
     {
-        $model = new MahasiswaModel();
+        $validasi = \Config\Services::validation();
+        $aturan = [
+            'nim' => [
+                'label' => 'NIM',
+                'rules' => 'required|min_length[3]|max_length[8]',
+                'errors' => [
+                    'required' => '{field} harus diisi',
+                    'min_length' => '{field} harus terdiri dari 3 karakter',
+                    'max_length' => '{field} harus terdiri dari 8 karakter'
+                ]
+            ],
+            'nama' => [
+                'label' => 'Nama',
+                'rules' => 'required|min_length[3]',
+                'errors' => [
+                    'required' => '{field} harus diisi',
+                    'min_length' => 'Minimal 3 karakter untuk {field}'
+                ]
+            ],
+            'cropped_foto_diri' => [
+                'label' => 'Foto Diri',
+                'rules' => 'required',
+                'errors' => [
+                    'required' => '{field} harus diisi'
+                ]
+            ],
+            'cropped_foto_ktp' => [
+                'label' => 'Foto KTP',
+                'rules' => 'required',
+                'errors' => [
+                    'required' => '{field} harus diisi'
+                ]
+            ],
+        ];
 
-        $fotoDiriBase64 = $this->request->getPost('cropped_foto_diri');
-        $fotoKtpBase64 = $this->request->getPost('cropped_foto_ktp');
+        $validasi->setRules($aturan);
+        if ($validasi->withRequest($this->request)->run()) {
+            $fotoDiriBase64 = $this->request->getPost('cropped_foto_diri');
+            $fotoKtpBase64 = $this->request->getPost('cropped_foto_ktp');
 
-        $fotoDiriName = null;
-        $fotoKtpName = null;
-
-        if ($fotoDiriBase64) {
             $fotoDiriName = $this->saveBase64Image($fotoDiriBase64, 'uploads/foto_diri');
-        }
-
-        if ($fotoKtpBase64) {
             $fotoKtpName = $this->saveBase64Image($fotoKtpBase64, 'uploads/foto_ktp');
+
+            $data = [
+                'nim' => $this->request->getPost('nim'),
+                'nama' => $this->request->getPost('nama'),
+                'foto_diri' => $fotoDiriName,
+                'foto_ktp' => $fotoKtpName,
+            ];
+
+            $model = new MahasiswaModel();
+            $model->save($data);
+
+            return redirect()->to('/mahasiswa');
+        } else {
+            return redirect()->back()->withInput()->with('errors', $validasi->getErrors());
         }
-
-        $model->insert([
-            'nim' => $this->request->getPost('nim'),
-            'nama' => $this->request->getPost('nama'),
-            'foto_diri' => $fotoDiriName,
-            'foto_ktp' => $fotoKtpName,
-        ]);
-
-        return redirect()->to('/mahasiswa');
     }
 
     // public function store()
@@ -85,29 +146,55 @@ class Mahasiswa extends Controller
 
     public function update($id)
     {
-        $model = new MahasiswaModel();
-
-        $fotoDiriBase64 = $this->request->getPost('cropped_foto_diri');
-        $fotoKtpBase64 = $this->request->getPost('cropped_foto_ktp');
-
-        $data = [
-            'nim' => $this->request->getPost('nim'),
-            'nama' => $this->request->getPost('nama'),
+        $validasi = \Config\Services::validation();
+        $aturan = [
+            'nim' => [
+                'label' => 'NIM',
+                'rules' => 'required|min_length[3]|max_length[8]',
+                'errors' => [
+                    'required' => '{field} harus diisi',
+                    'min_length' => '{field} harus terdiri dari 3 karakter',
+                    'max_length' => '{field} harus terdiri dari 8 karakter'
+                ]
+            ],
+            'nama' => [
+                'label' => 'Nama',
+                'rules' => 'required|min_length[3]',
+                'errors' => [
+                    'required' => '{field} harus diisi',
+                    'min_length' => 'Minimal 3 karakter untuk {field}'
+                ]
+            ]
         ];
 
-        if ($fotoDiriBase64) {
-            $fotoDiriName = $this->saveBase64Image($fotoDiriBase64, 'uploads/foto_diri');
-            $data['foto_diri'] = $fotoDiriName;
+        $validasi->setRules($aturan);
+        if ($validasi->withRequest($this->request)->run()) {
+            $model = new MahasiswaModel();
+
+            $data = [
+                'nim' => $this->request->getPost('nim'),
+                'nama' => $this->request->getPost('nama'),
+            ];
+
+            $fotoDiriBase64 = $this->request->getPost('cropped_foto_diri');
+            $fotoKtpBase64 = $this->request->getPost('cropped_foto_ktp');
+
+            if ($fotoDiriBase64) {
+                $fotoDiriName = $this->saveBase64Image($fotoDiriBase64, 'uploads/foto_diri');
+                $data['foto_diri'] = $fotoDiriName;
+            }
+
+            if ($fotoKtpBase64) {
+                $fotoKtpName = $this->saveBase64Image($fotoKtpBase64, 'uploads/foto_ktp');
+                $data['foto_ktp'] = $fotoKtpName;
+            }
+
+            $model->update($id, $data);
+
+            return redirect()->to('/mahasiswa');
+        } else {
+            return redirect()->back()->withInput()->with('errors', $validasi->getErrors());
         }
-
-        if ($fotoKtpBase64) {
-            $fotoKtpName = $this->saveBase64Image($fotoKtpBase64, 'uploads/foto_ktp');
-            $data['foto_ktp'] = $fotoKtpName;
-        }
-
-        $model->update($id, $data);
-
-        return redirect()->to('/mahasiswa');
     }
 
     public function delete($id)

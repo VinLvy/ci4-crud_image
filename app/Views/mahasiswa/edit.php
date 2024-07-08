@@ -10,6 +10,16 @@
 <body>
     <div class="container">
         <h1 class="mt-4">Edit Mahasiswa</h1>
+        <?php if (session()->get('errors')) : ?>
+            <div class="alert alert-danger">
+                <ul>
+                    <?php foreach (session()->get('errors') as $error) : ?>
+                        <li><?= $error ?></li>
+                    <?php endforeach ?>
+                </ul>
+            </div>
+        <?php endif ?>
+
         <form action="/mahasiswa/update/<?= $mahasiswa['id']; ?>" method="post" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="nim">NIM</label>
@@ -89,8 +99,8 @@
 
         $('#cropModal').on('shown.bs.modal', function() {
             cropper = new Cropper(document.getElementById('cropImage'), {
-                aspectRatio: 1,
-                viewMode: 3
+                aspectRatio: NaN,
+                viewMode: 1
             });
         }).on('hidden.bs.modal', function() {
             cropper.destroy();
